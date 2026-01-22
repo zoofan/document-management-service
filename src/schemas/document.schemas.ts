@@ -1,4 +1,3 @@
-// Document metadata schema
 export const documentMetadataSchema = {
   type: 'object',
   properties: {
@@ -10,7 +9,6 @@ export const documentMetadataSchema = {
   required: ['wordCount', 'characterCount'],
 } as const;
 
-// Full document schema
 export const documentSchema = {
   type: 'object',
   properties: {
@@ -25,7 +23,6 @@ export const documentSchema = {
   required: ['id', 'title', 'content', 'metadata', 'createdAt', 'updatedAt', 'version'],
 } as const;
 
-// Create document request body schema
 export const createDocumentBodySchema = {
   type: 'object',
   properties: {
@@ -37,7 +34,6 @@ export const createDocumentBodySchema = {
   required: ['title', 'content'],
 } as const;
 
-// List documents query string schema
 export const listDocumentsQuerySchema = {
   type: 'object',
   properties: {
@@ -48,7 +44,6 @@ export const listDocumentsQuerySchema = {
   },
 } as const;
 
-// Pagination schema
 export const paginationSchema = {
   type: 'object',
   properties: {
@@ -60,7 +55,6 @@ export const paginationSchema = {
   required: ['page', 'limit', 'total', 'totalPages'],
 } as const;
 
-// Paginated documents response schema
 export const paginatedDocumentsResponseSchema = {
   type: 'object',
   properties: {
@@ -70,7 +64,6 @@ export const paginatedDocumentsResponseSchema = {
   required: ['data', 'pagination'],
 } as const;
 
-// Document ID parameter schema
 export const documentIdParamsSchema = {
   type: 'object',
   properties: {
@@ -79,7 +72,6 @@ export const documentIdParamsSchema = {
   required: ['id'],
 } as const;
 
-// Delete response schema
 export const deleteDocumentResponseSchema = {
   type: 'object',
   properties: {
@@ -89,9 +81,6 @@ export const deleteDocumentResponseSchema = {
   required: ['success', 'message'],
 } as const;
 
-// PATCH document request body schema (partial update)
-// Allows updating title and metadata fields, but NOT content
-// Content changes should go through POST /changes endpoint
 export const patchDocumentBodySchema = {
   type: 'object',
   properties: {
@@ -100,10 +89,9 @@ export const patchDocumentBodySchema = {
     tags: { type: 'array', items: { type: 'string', maxLength: 50 }, maxItems: 20 },
   },
   additionalProperties: false,
-  minProperties: 1, // At least one field required
+  minProperties: 1,
 } as const;
 
-// PATCH headers schema (If-Match for concurrency)
 export const patchDocumentHeadersSchema = {
   type: 'object',
   properties: {

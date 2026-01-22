@@ -7,13 +7,11 @@ export const errorResponseSchema = {
   required: ['error', 'code'],
 } as const;
 
-// Error response type
 export interface ErrorResponse {
   error: string;
   code: number;
 }
 
-// Helper to create error response
 export function createErrorResponse(code: number, error: string): ErrorResponse {
   return { error, code };
 }

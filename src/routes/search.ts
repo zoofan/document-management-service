@@ -4,7 +4,6 @@ import { searchQueryBodySchema, searchResponseSchema } from '../schemas/search.s
 import { SearchQuery } from '../types/document';
 
 export async function searchRoutes(app: FastifyInstance): Promise<void> {
-  // Search across documents
   app.post<{
     Body: SearchQuery;
   }>('/api/search', {

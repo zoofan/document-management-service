@@ -13,7 +13,6 @@ import { ApplyChangesInput } from '../types/document';
 import { generateETag, validateIfMatch } from '../utils/etag';
 
 export async function changesRoutes(app: FastifyInstance): Promise<void> {
-  // Apply redline changes to a document
   app.post<{
     Params: { id: string };
     Body: ApplyChangesInput;
@@ -59,13 +58,11 @@ Each change supports multiple targeting strategies:
     const { changes } = request.body;
     const ifMatch = request.headers['if-match'];
 
-    // Get the document
     const doc = getDocument(id);
     if (!doc) {
       return reply.status(404).send(createErrorResponse(404, `Document with ID ${id} not found`));
     }
 
-    // Validate ETag for concurrency control
     if (!validateIfMatch(ifMatch, doc)) {
       const currentEtag = generateETag(doc);
       return reply.status(412).send({
@@ -77,15 +74,12 @@ Each change supports multiple targeting strategies:
 
     const previousVersion = doc.version;
 
-    // Apply all changes
     const { newContent, results, totalReplacements } = applyChanges(doc.content, changes);
 
-    // Update document if there were changes
     if (totalReplacements > 0) {
       updateDocument(id, { content: newContent });
     }
 
-    // Get updated document
     const updatedDoc = getDocument(id)!;
     const newEtag = generateETag(updatedDoc);
 

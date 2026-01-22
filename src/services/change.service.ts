@@ -1,37 +1,9 @@
-/**
- * Change Service - Find/Replace Operations
- *
- * Performance Characteristics:
- * - Time Complexity: O(n × k) where n = document length, k = number of changes
- * - Space Complexity: O(n) for result string (JS strings are immutable)
- *
- * Implementation uses native V8 RegExp and String.replace() which are
- * implemented in optimized C++ and run in linear time for literal patterns.
- *
- * ReDoS Prevention: User input is escaped to prevent regex injection.
- * Only literal string matching is supported (no user-supplied regex patterns).
- *
- * Targeting Options:
- * - replaceAll: Replace all occurrences (default) - uses fast native String.replace()
- * - occurrence: Replace specific occurrence by number (1-indexed)
- * - startIndex/endIndex: Replace within character range
- * - beforeContext/afterContext: Validate surrounding text before replacing
- */
-
 import { Change, ChangeResult } from '../types/document';
 
-/**
- * Escape special regex characters to prevent ReDoS attacks.
- * Converts user input into a safe literal pattern.
- * Time: O(n) where n = string length
- */
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/**
- * Build regex pattern for find/replace.
- */
 function buildPattern(change: Change): RegExp {
   const { searchText, matchCase = true, matchWholeWord = false } = change;
 
@@ -45,9 +17,6 @@ function buildPattern(change: Change): RegExp {
   return new RegExp(pattern, flags);
 }
 
-/**
- * Check if change uses advanced targeting (requires slow path).
- */
 function usesAdvancedTargeting(change: Change): boolean {
   return (
     change.startIndex !== undefined ||
@@ -58,10 +27,6 @@ function usesAdvancedTargeting(change: Change): boolean {
   );
 }
 
-/**
- * Fast path: Use native String.replace() for simple replaceAll operations.
- * Time: O(n) - single pass with native V8 implementation
- */
 function applyFastPath(
   content: string,
   change: Change
@@ -69,7 +34,6 @@ function applyFastPath(
   const { searchText, replaceText, replaceAll = true } = change;
   const pattern = buildPattern(change);
 
-  // Count matches first
   const matches = content.match(pattern);
   const matchesFound = matches ? matches.length : 0;
 
@@ -84,11 +48,9 @@ function applyFastPath(
   let replacementsMade: number;
 
   if (replaceAll) {
-    // Replace all occurrences using native replace
     newContent = content.replace(pattern, replaceText);
     replacementsMade = matchesFound;
   } else {
-    // Replace first occurrence only
     const nonGlobalPattern = new RegExp(
       pattern.source,
       pattern.flags.replace('g', '')
@@ -103,10 +65,6 @@ function applyFastPath(
   };
 }
 
-/**
- * Find all match positions in content.
- * Returns array of { index, length, text } for each match.
- */
 function findAllMatches(
   content: string,
   pattern: RegExp
@@ -122,7 +80,6 @@ function findAllMatches(
       text: match[0],
     });
 
-    // Prevent infinite loop for zero-length matches
     if (match[0].length === 0) {
       searchPattern.lastIndex++;
     }
@@ -131,9 +88,6 @@ function findAllMatches(
   return matches;
 }
 
-/**
- * Validate contextual matching constraints.
- */
 function validateContext(
   content: string,
   matchIndex: number,
@@ -158,9 +112,6 @@ function validateContext(
   return true;
 }
 
-/**
- * Check if a match falls within the specified character range.
- */
 function isInRange(
   matchIndex: number,
   matchLength: number,
@@ -184,10 +135,6 @@ function isInRange(
   return true;
 }
 
-/**
- * Slow path: Handle advanced targeting (ranges, context, specific occurrence).
- * Time: O(n) for finding matches + O(m) for applying replacements
- */
 function applySlowPath(
   content: string,
   change: Change
@@ -207,7 +154,6 @@ function applySlowPath(
   const allMatches = findAllMatches(content, pattern);
   const matchesFound = allMatches.length;
 
-  // Filter matches based on targeting criteria
   const eligibleMatches = allMatches.filter((match) => {
     if (!isInRange(match.index, match.length, startIndex, endIndex)) {
       return false;
@@ -226,24 +172,19 @@ function applySlowPath(
     let matchesToReplace: typeof eligibleMatches;
 
     if (startIndex !== undefined || endIndex !== undefined) {
-      // Character range: replace all eligible matches within range
       matchesToReplace = eligibleMatches;
     } else if (!replaceAll && occurrence !== undefined && occurrence > 0) {
-      // Specific occurrence
       if (occurrence <= eligibleMatches.length) {
         matchesToReplace = [eligibleMatches[occurrence - 1]];
       } else {
         matchesToReplace = [];
       }
     } else if (!replaceAll) {
-      // First occurrence only
       matchesToReplace = [eligibleMatches[0]];
     } else {
-      // All eligible matches
       matchesToReplace = eligibleMatches;
     }
 
-    // Apply replacements in reverse order to preserve indices
     matchesToReplace.sort((a, b) => b.index - a.index);
 
     for (const match of matchesToReplace) {
@@ -268,38 +209,17 @@ function applySlowPath(
   };
 }
 
-/**
- * Apply a single find/replace change to content.
- * Automatically selects fast or slow path based on targeting options.
- *
- * Time: O(n) for fast path, O(n + m) for slow path
- * Space: O(n) for the new string
- */
 export function applySingleChange(
   content: string,
   change: Change
 ): { newContent: string; result: ChangeResult } {
-  // Use fast path for simple operations
   if (!usesAdvancedTargeting(change)) {
     return applyFastPath(content, change);
   }
 
-  // Use slow path for advanced targeting
   return applySlowPath(content, change);
 }
 
-/**
- * Apply multiple changes to content sequentially.
- * Changes are applied in order, allowing later changes to operate
- * on results of earlier changes.
- *
- * Note: When using character ranges with multiple changes, be aware that
- * earlier changes may shift positions. Consider using contextual matching
- * for more robust targeting.
- *
- * Time: O(n × k) where n = content length, k = number of changes
- * Space: O(n) - only one copy of content exists at a time
- */
 export function applyChanges(
   content: string,
   changes: Change[]

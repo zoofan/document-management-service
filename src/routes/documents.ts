@@ -22,7 +22,6 @@ import { CreateDocumentInput, ListDocumentsQuery, PatchDocumentInput } from '../
 import { generateETag, validateIfMatch } from '../utils/etag';
 
 export async function documentRoutes(app: FastifyInstance): Promise<void> {
-  // Create a new document
   app.post<{
     Body: CreateDocumentInput;
   }>('/api/documents', {
@@ -43,7 +42,6 @@ export async function documentRoutes(app: FastifyInstance): Promise<void> {
       .send(doc);
   });
 
-  // List documents with pagination
   app.get<{
     Querystring: ListDocumentsQuery;
   }>('/api/documents', {
@@ -59,7 +57,6 @@ export async function documentRoutes(app: FastifyInstance): Promise<void> {
     return listDocuments(request.query);
   });
 
-  // Get document by ID
   app.get<{
     Params: { id: string };
   }>('/api/documents/:id', {
@@ -83,8 +80,6 @@ export async function documentRoutes(app: FastifyInstance): Promise<void> {
       .send(doc);
   });
 
-  // Partial update document (title, metadata)
-  // Note: For content changes, use POST /api/documents/:id/changes
   app.patch<{
     Params: { id: string };
     Body: PatchDocumentInput;
@@ -113,13 +108,11 @@ If the document has been modified since you last fetched it, returns 412 Precond
     const { id } = request.params;
     const ifMatch = request.headers['if-match'];
 
-    // Get the document
     const doc = getDocument(id);
     if (!doc) {
       return reply.status(404).send(createErrorResponse(404, `Document with ID ${id} not found`));
     }
 
-    // Validate ETag for concurrency control
     if (!validateIfMatch(ifMatch, doc)) {
       const currentEtag = generateETag(doc);
       return reply.status(412).send({
@@ -129,7 +122,6 @@ If the document has been modified since you last fetched it, returns 412 Precond
       });
     }
 
-    // Apply patch
     const updatedDoc = patchDocument(id, request.body);
     const newEtag = generateETag(updatedDoc!);
 
@@ -138,7 +130,6 @@ If the document has been modified since you last fetched it, returns 412 Precond
       .send(updatedDoc);
   });
 
-  // Delete document
   app.delete<{
     Params: { id: string };
   }>('/api/documents/:id', {

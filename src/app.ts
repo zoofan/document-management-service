@@ -8,13 +8,10 @@ export async function buildApp(): Promise<FastifyInstance> {
     logger: true,
   });
 
-  // Register error handler first
   await registerErrorHandler(app);
 
-  // Register plugins
   await registerSwagger(app);
 
-  // Register routes
   await registerRoutes(app);
 
   return app;
