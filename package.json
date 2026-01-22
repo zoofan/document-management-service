@@ -1,0 +1,41 @@
+{
+  "name": "document-management-api",
+  "version": "1.0.0",
+  "description": "Document Management API with Fastify and Swagger",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "nodemon",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:all": "concurrently -n backend,frontend -c blue,green \"npm run dev\" \"npm run dev:frontend\"",
+    "build": "tsc",
+    "build:frontend": "npm run build --prefix frontend",
+    "build:all": "npm run build && npm run build:frontend",
+    "start": "node dist/server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:perf": "vitest run tests/performance"
+  },
+  "keywords": [
+    "fastify",
+    "typescript",
+    "swagger",
+    "api"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fastify/swagger": "^8.15.0",
+    "@fastify/swagger-ui": "^4.1.0",
+    "fastify": "^4.28.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.1.0",
+    "@vitest/coverage-v8": "^4.0.17",
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4",
+    "vitest": "^4.0.17"
+  }
+}
